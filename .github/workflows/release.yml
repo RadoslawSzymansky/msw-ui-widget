@@ -104,27 +104,36 @@ jobs:
       - name: Create release
         id: create-release
         run: |
-          # Get current version from package.json
+          # Get current version from package.json (before release)
           CURRENT_VERSION=$(node -p "require('./package.json').version")
-          EXPECTED_TAG="v${CURRENT_VERSION}"
-
-          # Check if tag already exists
-          if git rev-parse "$EXPECTED_TAG" >/dev/null 2>&1; then
-            echo "Tag $EXPECTED_TAG already exists, skipping release creation"
-            echo "tag-exists=true" >> $GITHUB_OUTPUT
-            echo "tag=${EXPECTED_TAG}" >> $GITHUB_OUTPUT
-            echo "version=${CURRENT_VERSION}" >> $GITHUB_OUTPUT
-          else
-            echo "Creating new release..."
-            npm run release
+          echo "Current version before release: ${CURRENT_VERSION}"
+          
+          # Get the latest tag to see what was last released
+          LATEST_TAG=$(git describe --tags --abbrev=0 2>/dev/null || echo "")
+          echo "Latest tag: ${LATEST_TAG}"
+          
+          # Always run npm run release - it will determine the new version based on commits
+          echo "Creating new release..."
+          npm run release
+          
+          # Get the new version and tag after release
+          NEW_VERSION=$(node -p "require('./package.json').version")
+          NEW_TAG=$(git describe --tags --abbrev=0)
+          
+          echo "New version after release: ${NEW_VERSION}"
+          echo "New tag after release: ${NEW_TAG}"
+          
+          # Check if this is actually a new release (version changed)
+          if [ "$CURRENT_VERSION" != "$NEW_VERSION" ]; then
+            echo "Version changed from ${CURRENT_VERSION} to ${NEW_VERSION} - new release created"
             echo "tag-exists=false" >> $GITHUB_OUTPUT
-            # Get the new tag
-            NEW_TAG=$(git describe --tags --abbrev=0)
-            # Get new version from package.json (after release)
-            NEW_VERSION=$(node -p "require('./package.json').version")
             echo "tag=${NEW_TAG}" >> $GITHUB_OUTPUT
             echo "version=${NEW_VERSION}" >> $GITHUB_OUTPUT
-            echo "Created release ${NEW_TAG} with version ${NEW_VERSION}"
+          else
+            echo "Version did not change - no new release needed"
+            echo "tag-exists=true" >> $GITHUB_OUTPUT
+            echo "tag=${NEW_TAG}" >> $GITHUB_OUTPUT
+            echo "version=${NEW_VERSION}" >> $GITHUB_OUTPUT
           fi
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
