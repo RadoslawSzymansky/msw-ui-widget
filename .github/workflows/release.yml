@@ -29,12 +29,12 @@ jobs:
             echo "Last commit is a release commit, will only publish"
             exit 0
           fi
-          
+
           echo "is-release-commit=false" >> $GITHUB_OUTPUT
-          
+
           # Get last tag
           LAST_TAG=$(git describe --tags --abbrev=0 2>/dev/null || echo "")
-          
+
           if [ -z "$LAST_TAG" ]; then
             # No tags exist, check if there are any commits
             COMMIT_COUNT=$(git rev-list --count HEAD 2>/dev/null || echo "0")
@@ -99,7 +99,18 @@ jobs:
       - name: Get new tag
         id: tag
         run: |
-          TAG=$(git describe --tags --abbrev=0)
+          # Fetch tags first
+          git fetch --tags
+          # Try to get the latest tag
+          TAG=$(git describe --tags --abbrev=0 2>/dev/null || echo "")
+          if [ -z "$TAG" ]; then
+            # If no tag found, try to get version from package.json
+            VERSION=$(node -p "require('./package.json').version")
+            TAG="v${VERSION}"
+            echo "No tag found, using version from package.json: ${TAG}"
+          else
+            echo "Found tag: ${TAG}"
+          fi
           echo "tag=${TAG}" >> $GITHUB_OUTPUT
           echo "New tag: ${TAG}"
 
@@ -182,10 +193,22 @@ jobs:
         with:
           fetch-depth: 0
 
+      - name: Fetch tags
+        run: git fetch --tags
+
       - name: Get latest tag
         id: tag
         run: |
-          TAG=$(git describe --tags --abbrev=0)
+          # Try to get the latest tag
+          TAG=$(git describe --tags --abbrev=0 2>/dev/null || echo "")
+          if [ -z "$TAG" ]; then
+            # If no tag found, try to get version from package.json
+            VERSION=$(node -p "require('./package.json').version")
+            TAG="v${VERSION}"
+            echo "No tag found, using version from package.json: ${TAG}"
+          else
+            echo "Found tag: ${TAG}"
+          fi
           echo "tag=${TAG}" >> $GITHUB_OUTPUT
           echo "Latest tag: ${TAG}"
 
@@ -212,4 +235,3 @@ jobs:
           prerelease: false
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
