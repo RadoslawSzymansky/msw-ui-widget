@@ -286,7 +286,7 @@
 }
 
 /* Ensure SVG icons in theme toggle are visible */
-.msw-widget-root button svg {
+.msw-widget-root button:not(.msw-floating-button) svg {
   width: 16px !important;
   height: 16px !important;
   display: inline-block !important;

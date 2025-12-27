@@ -49,14 +49,14 @@ export const FloatingButton: React.FC<FloatingButtonProps> = ({ onClick }) => {
   return (
     <button
       onClick={handleClick}
-      className={`msw-floating-button rounded-full p-4 shadow-lg relative transition-all duration-200 ${
+      className={`msw-floating-button rounded-lg p-4 shadow-lg relative transition-all duration-200 ${
         theme === 'dark'
           ? isPanelOpen
             ? 'bg-indigo-600 hover:bg-indigo-500'
             : 'bg-indigo-500 hover:bg-indigo-400'
           : isPanelOpen
             ? 'bg-blue-600 hover:bg-blue-700'
-            : 'bg-blue-500 hover:bg-blue-600'
+            : 'bg-blue-600 hover:bg-blue-700'
       } text-white ${isAnimating ? 'msw-floating-button-calling' : ''}`}
       aria-label="Toggle MSW Widget"
       title="MSW Widget - Manage API Mocks"
@@ -64,7 +64,8 @@ export const FloatingButton: React.FC<FloatingButtonProps> = ({ onClick }) => {
         boxShadow:
           theme === 'dark'
             ? '0 4px 14px 0 rgba(99, 102, 241, 0.4)'
-            : '0 4px 14px 0 rgba(59, 130, 246, 0.4)',
+            : '0 4px 14px 0 rgba(37, 99, 235, 0.4)',
+        opacity: theme === 'light' && !isPanelOpen ? 0.9 : 1,
       }}
     >
       <svg
