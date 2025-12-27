@@ -98,8 +98,21 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
 
-      - name: Fetch tags
-        run: git fetch --tags
+      - name: Fetch tags and verify
+        run: |
+          git fetch --tags --force
+          echo "All tags:"
+          git tag -l
+          echo "Latest tag:"
+          git describe --tags --abbrev=0 2>/dev/null || echo "No tags found"
+          echo "Commits since last tag:"
+          LATEST_TAG=$(git describe --tags --abbrev=0 2>/dev/null || echo "")
+          if [ -n "$LATEST_TAG" ]; then
+            git log ${LATEST_TAG}..HEAD --oneline --pretty=format:"%s" | head -10
+          else
+            echo "No tags found, showing last 10 commits:"
+            git log --oneline -10 --pretty=format:"%s"
+          fi
 
       - name: Create release
         id: create-release
