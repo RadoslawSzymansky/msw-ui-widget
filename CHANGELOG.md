@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.1.3](https://github.com/RadoslawSzymansky/msw-ui-widget/compare/v0.1.2...v0.1.3) (2025-12-27)
+
+### Bug Fixes
+
+- ensure theme toggle icon is always visible with explicit width/height ([4dd363b](https://github.com/RadoslawSzymansky/msw-ui-widget/commit/4dd363bd4ceea1c446c455e86670bc801c8e3d9a))
+
 ### 0.1.2 (2025-12-27)
 
 ### Features
