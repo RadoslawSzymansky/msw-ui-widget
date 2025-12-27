@@ -1,6 +1,6 @@
 {
   "name": "msw-ui-widget",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "description": "React widget for managing MSW mocks in real-time during development",
   "type": "module",
   "main": "./dist/index.js",
