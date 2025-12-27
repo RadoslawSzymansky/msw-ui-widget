@@ -4,6 +4,9 @@ on:
   push:
     branches:
       - main
+  pull_request:
+    branches:
+      - main
 
 jobs:
   check-release-needed:
@@ -12,6 +15,7 @@ jobs:
     outputs:
       should-release: ${{ steps.check.outputs.should-release }}
       is-release-commit: ${{ steps.check.outputs.is-release-commit }}
+      should-prerelease: ${{ steps.check.outputs.should-prerelease }}
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -26,6 +30,7 @@ jobs:
           if echo "$LAST_COMMIT_MSG" | grep -q "chore(release):"; then
             echo "is-release-commit=true" >> $GITHUB_OUTPUT
             echo "should-release=false" >> $GITHUB_OUTPUT
+            echo "should-prerelease=false" >> $GITHUB_OUTPUT
             echo "Last commit is a release commit, will only publish"
             exit 0
           fi
@@ -40,19 +45,23 @@ jobs:
             COMMIT_COUNT=$(git rev-list --count HEAD 2>/dev/null || echo "0")
             if [ "$COMMIT_COUNT" -gt "0" ]; then
               echo "should-release=true" >> $GITHUB_OUTPUT
+              echo "should-prerelease=false" >> $GITHUB_OUTPUT
               echo "No previous tag found, will create initial release"
             else
               echo "should-release=false" >> $GITHUB_OUTPUT
+              echo "should-prerelease=true" >> $GITHUB_OUTPUT
             fi
           else
             # Check for feat: or fix: commits since last tag
             COMMITS=$(git log ${LAST_TAG}..HEAD --pretty=format:"%s" | grep -E "^(feat|fix):" || true)
             if [ -n "$COMMITS" ]; then
               echo "should-release=true" >> $GITHUB_OUTPUT
+              echo "should-prerelease=false" >> $GITHUB_OUTPUT
               echo "Found release-worthy commits since ${LAST_TAG}"
             else
               echo "should-release=false" >> $GITHUB_OUTPUT
-              echo "No release-worthy commits found since ${LAST_TAG}"
+              echo "should-prerelease=true" >> $GITHUB_OUTPUT
+              echo "No release-worthy commits found since ${LAST_TAG}, will create prerelease"
             fi
           fi
 
@@ -94,7 +103,7 @@ jobs:
           # Get current version from package.json
           CURRENT_VERSION=$(node -p "require('./package.json').version")
           EXPECTED_TAG="v${CURRENT_VERSION}"
-          
+
           # Check if tag already exists
           if git rev-parse "$EXPECTED_TAG" >/dev/null 2>&1; then
             echo "Tag $EXPECTED_TAG already exists, skipping release creation"
@@ -205,6 +214,108 @@ jobs:
         run: npm publish --access public
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+
+  create-prerelease:
+    name: Create Prerelease
+    runs-on: ubuntu-latest
+    needs: check-release-needed
+    # Create prerelease on every commit (except release commits)
+    if: |
+      needs.check-release-needed.outputs.should-prerelease == 'true' &&
+      needs.check-release-needed.outputs.is-release-commit != 'true'
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Configure Git
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+      - name: Fetch tags
+        run: git fetch --tags
+
+      - name: Create prerelease
+        id: prerelease
+        run: |
+          # Get base version from package.json
+          BASE_VERSION=$(node -p "require('./package.json').version")
+
+          # Generate unique prerelease version
+          COMMIT_SHA=$(git rev-parse --short HEAD)
+          TIMESTAMP=$(date +%Y%m%d%H%M%S)
+
+          if [ "${{ github.event_name }}" = "pull_request" ]; then
+            PR_NUMBER="${{ github.event.pull_request.number }}"
+            PRERELEASE_VERSION="${BASE_VERSION}-pr${PR_NUMBER}.${COMMIT_SHA}"
+            PRERELEASE_TAG="v${PRERELEASE_VERSION}"
+          else
+            PRERELEASE_VERSION="${BASE_VERSION}-alpha.${TIMESTAMP}.${COMMIT_SHA}"
+            PRERELEASE_TAG="v${PRERELEASE_VERSION}"
+          fi
+
+          echo "Creating prerelease: ${PRERELEASE_TAG}"
+
+          # Create tag (without modifying package.json)
+          git tag -a ${PRERELEASE_TAG} -m "chore(release): ${PRERELEASE_VERSION} [prerelease]"
+
+          # Push tag
+          git push origin ${PRERELEASE_TAG}
+
+          echo "tag=${PRERELEASE_TAG}" >> $GITHUB_OUTPUT
+          echo "version=${PRERELEASE_VERSION}" >> $GITHUB_OUTPUT
+          echo "Prerelease tag created: ${PRERELEASE_TAG}"
+
+      - name: Create GitHub Prerelease
+        uses: softprops/action-gh-release@v1
+        with:
+          tag_name: ${{ steps.prerelease.outputs.tag }}
+          name: Prerelease ${{ steps.prerelease.outputs.tag }}
+          body: |
+            ## Prerelease Build
+
+            **Version:** ${{ steps.prerelease.outputs.version }}
+            **Commit:** ${{ github.sha }}
+            **Branch:** ${{ github.ref_name }}
+            ${{ github.event_name == 'pull_request' && format('**PR:** #{0}', github.event.pull_request.number) || '' }}
+
+            This is an automated prerelease build.
+          draft: false
+          prerelease: true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build package for prerelease
+        if: github.event_name == 'push'
+        run: npm run build
+
+      - name: Publish prerelease to npm
+        if: github.event_name == 'push'
+        run: |
+          # Temporarily update package.json version for npm publish
+          npm version ${PRERELEASE_VERSION} --no-git-tag-version
+          npm publish --access public --tag alpha
+          # Restore original version
+          git checkout package.json
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+          PRERELEASE_VERSION: ${{ steps.prerelease.outputs.version }}
+        continue-on-error: true
 
   create-github-release-from-tag:
     name: Create GitHub Release from Tag
