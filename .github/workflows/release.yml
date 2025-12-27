@@ -107,22 +107,22 @@ jobs:
           # Get current version from package.json (before release)
           CURRENT_VERSION=$(node -p "require('./package.json').version")
           echo "Current version before release: ${CURRENT_VERSION}"
-          
+
           # Get the latest tag to see what was last released
           LATEST_TAG=$(git describe --tags --abbrev=0 2>/dev/null || echo "")
           echo "Latest tag: ${LATEST_TAG}"
-          
+
           # Always run npm run release - it will determine the new version based on commits
           echo "Creating new release..."
           npm run release
-          
+
           # Get the new version and tag after release
           NEW_VERSION=$(node -p "require('./package.json').version")
           NEW_TAG=$(git describe --tags --abbrev=0)
-          
+
           echo "New version after release: ${NEW_VERSION}"
           echo "New tag after release: ${NEW_TAG}"
-          
+
           # Check if this is actually a new release (version changed)
           if [ "$CURRENT_VERSION" != "$NEW_VERSION" ]; then
             echo "Version changed from ${CURRENT_VERSION} to ${NEW_VERSION} - new release created"
@@ -233,7 +233,7 @@ jobs:
           echo "create-release result: ${{ needs.create-release.result }}"
           echo "create-release version output: ${{ needs.create-release.outputs.version }}"
           echo "create-release tag output: ${{ needs.create-release.outputs.tag }}"
-          
+
           # If create-release created a new release, use its version output
           if [ "${{ needs.check-release-needed.outputs.should-release }}" == "true" ] && [ "${{ needs.create-release.result }}" == "success" ]; then
             # Try to get version from create-release output first
