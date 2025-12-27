@@ -1,0 +1,24 @@
+# Source files
+src/
+prompts/
+
+# Config files
+tsconfig.json
+vite.config.ts
+tailwind.config.js
+postcss.config.js
+
+# Development
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Git
+.git/
+.gitignore
+
+# Documentation (keep README)
+*.md
+!README.md
+

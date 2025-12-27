@@ -1,0 +1,215 @@
+name: Release
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  check-release-needed:
+    name: Check if Release Needed
+    runs-on: ubuntu-latest
+    outputs:
+      should-release: ${{ steps.check.outputs.should-release }}
+      is-release-commit: ${{ steps.check.outputs.is-release-commit }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Check for release-worthy commits
+        id: check
+        run: |
+          # Check if last commit is a release commit
+          LAST_COMMIT_MSG=$(git log -1 --pretty=format:"%s")
+          if echo "$LAST_COMMIT_MSG" | grep -q "chore(release):"; then
+            echo "is-release-commit=true" >> $GITHUB_OUTPUT
+            echo "should-release=false" >> $GITHUB_OUTPUT
+            echo "Last commit is a release commit, will only publish"
+            exit 0
+          fi
+          
+          echo "is-release-commit=false" >> $GITHUB_OUTPUT
+          
+          # Get last tag
+          LAST_TAG=$(git describe --tags --abbrev=0 2>/dev/null || echo "")
+          
+          if [ -z "$LAST_TAG" ]; then
+            # No tags exist, check if there are any commits
+            COMMIT_COUNT=$(git rev-list --count HEAD 2>/dev/null || echo "0")
+            if [ "$COMMIT_COUNT" -gt "0" ]; then
+              echo "should-release=true" >> $GITHUB_OUTPUT
+              echo "No previous tag found, will create initial release"
+            else
+              echo "should-release=false" >> $GITHUB_OUTPUT
+            fi
+          else
+            # Check for feat: or fix: commits since last tag
+            COMMITS=$(git log ${LAST_TAG}..HEAD --pretty=format:"%s" | grep -E "^(feat|fix):" || true)
+            if [ -n "$COMMITS" ]; then
+              echo "should-release=true" >> $GITHUB_OUTPUT
+              echo "Found release-worthy commits since ${LAST_TAG}"
+            else
+              echo "should-release=false" >> $GITHUB_OUTPUT
+              echo "No release-worthy commits found since ${LAST_TAG}"
+            fi
+          fi
+
+  create-release:
+    name: Create Release
+    runs-on: ubuntu-latest
+    needs: check-release-needed
+    if: needs.check-release-needed.outputs.should-release == 'true'
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Configure Git
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+      - name: Create release
+        run: npm run release
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Push release commit and tags
+        run: |
+          git push --follow-tags
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Get new tag
+        id: tag
+        run: |
+          TAG=$(git describe --tags --abbrev=0)
+          echo "tag=${TAG}" >> $GITHUB_OUTPUT
+          echo "New tag: ${TAG}"
+
+      - name: Extract changelog
+        id: changelog
+        run: |
+          TAG=${{ steps.tag.outputs.tag }}
+          VERSION=${TAG#v}
+          echo "Extracting changelog for version: ${VERSION}"
+          # Extract changelog section for this version
+          awk "/^## \\[${VERSION}\\]/,/^## \\[/" CHANGELOG.md | head -n -1 > /tmp/release-notes.md || \
+          awk "/^## \\[${VERSION}\\]/,/^$/" CHANGELOG.md > /tmp/release-notes.md || \
+          echo "## ${VERSION}\n\nSee CHANGELOG.md for details." > /tmp/release-notes.md
+          echo "Release notes:"
+          cat /tmp/release-notes.md
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v1
+        with:
+          tag_name: ${{ steps.tag.outputs.tag }}
+          name: Release ${{ steps.tag.outputs.tag }}
+          body_path: /tmp/release-notes.md
+          draft: false
+          prerelease: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  publish:
+    name: Publish to npm
+    runs-on: ubuntu-latest
+    needs: [check-release-needed, create-release]
+    # Publish if release was created OR if last commit is a release commit (manual release)
+    if: |
+      (needs.check-release-needed.outputs.should-release == 'true' && needs.create-release.result == 'success') ||
+      needs.check-release-needed.outputs.is-release-commit == 'true'
+    permissions:
+      contents: read
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          registry-url: 'https://registry.npmjs.org'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build package
+        run: npm run build
+
+      - name: Get version from package.json
+        id: version
+        run: |
+          VERSION=$(node -p "require('./package.json').version")
+          echo "version=${VERSION}" >> $GITHUB_OUTPUT
+          echo "Publishing version: ${VERSION}"
+
+      - name: Publish to npm
+        run: npm publish --access public
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+
+  create-github-release-from-tag:
+    name: Create GitHub Release from Tag
+    runs-on: ubuntu-latest
+    needs: check-release-needed
+    # Only run if last commit is a release commit (manual release was pushed)
+    if: needs.check-release-needed.outputs.is-release-commit == 'true'
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Get latest tag
+        id: tag
+        run: |
+          TAG=$(git describe --tags --abbrev=0)
+          echo "tag=${TAG}" >> $GITHUB_OUTPUT
+          echo "Latest tag: ${TAG}"
+
+      - name: Extract changelog
+        id: changelog
+        run: |
+          TAG=${{ steps.tag.outputs.tag }}
+          VERSION=${TAG#v}
+          echo "Extracting changelog for version: ${VERSION}"
+          # Extract changelog section for this version
+          awk "/^## \\[${VERSION}\\]/,/^## \\[/" CHANGELOG.md | head -n -1 > /tmp/release-notes.md || \
+          awk "/^## \\[${VERSION}\\]/,/^$/" CHANGELOG.md > /tmp/release-notes.md || \
+          echo "## ${VERSION}\n\nSee CHANGELOG.md for details." > /tmp/release-notes.md
+          echo "Release notes:"
+          cat /tmp/release-notes.md
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v1
+        with:
+          tag_name: ${{ steps.tag.outputs.tag }}
+          name: Release ${{ steps.tag.outputs.tag }}
+          body_path: /tmp/release-notes.md
+          draft: false
+          prerelease: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
