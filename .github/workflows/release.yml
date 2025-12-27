@@ -85,12 +85,34 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
 
+      - name: Fetch tags
+        run: git fetch --tags
+
       - name: Create release
-        run: npm run release
+        id: create-release
+        run: |
+          # Get current version from package.json
+          CURRENT_VERSION=$(node -p "require('./package.json').version")
+          EXPECTED_TAG="v${CURRENT_VERSION}"
+          
+          # Check if tag already exists
+          if git rev-parse "$EXPECTED_TAG" >/dev/null 2>&1; then
+            echo "Tag $EXPECTED_TAG already exists, skipping release creation"
+            echo "tag-exists=true" >> $GITHUB_OUTPUT
+            echo "tag=${EXPECTED_TAG}" >> $GITHUB_OUTPUT
+          else
+            echo "Creating new release..."
+            npm run release
+            echo "tag-exists=false" >> $GITHUB_OUTPUT
+            # Get the new tag
+            NEW_TAG=$(git describe --tags --abbrev=0)
+            echo "tag=${NEW_TAG}" >> $GITHUB_OUTPUT
+          fi
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Push release commit and tags
+        if: steps.create-release.outputs.tag-exists == 'false'
         run: |
           git push --follow-tags
         env:
@@ -99,17 +121,23 @@ jobs:
       - name: Get new tag
         id: tag
         run: |
-          # Fetch tags first
-          git fetch --tags
-          # Try to get the latest tag
-          TAG=$(git describe --tags --abbrev=0 2>/dev/null || echo "")
-          if [ -z "$TAG" ]; then
-            # If no tag found, try to get version from package.json
-            VERSION=$(node -p "require('./package.json').version")
-            TAG="v${VERSION}"
-            echo "No tag found, using version from package.json: ${TAG}"
+          # Use tag from create-release step if available, otherwise fetch and find
+          if [ -n "${{ steps.create-release.outputs.tag }}" ]; then
+            TAG="${{ steps.create-release.outputs.tag }}"
+            echo "Using tag from create-release step: ${TAG}"
           else
-            echo "Found tag: ${TAG}"
+            # Fetch tags first
+            git fetch --tags
+            # Try to get the latest tag
+            TAG=$(git describe --tags --abbrev=0 2>/dev/null || echo "")
+            if [ -z "$TAG" ]; then
+              # If no tag found, try to get version from package.json
+              VERSION=$(node -p "require('./package.json').version")
+              TAG="v${VERSION}"
+              echo "No tag found, using version from package.json: ${TAG}"
+            else
+              echo "Found tag: ${TAG}"
+            fi
           fi
           echo "tag=${TAG}" >> $GITHUB_OUTPUT
           echo "New tag: ${TAG}"
