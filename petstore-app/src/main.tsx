@@ -10,7 +10,6 @@ import { worker } from './mocks/browser';
 // @ts-ignore - Local import from parent project
 import { MswUiWidget } from '../../src/components/MswUiWidget';
 // @ts-ignore
-import '../../src/styles/widget.css';
 
 // Start MSW worker
 async function startApp() {
@@ -20,9 +19,8 @@ async function startApp() {
 
   ReactDOM.createRoot(document.getElementById('root')!).render(
     <React.StrictMode>
-      <MswUiWidget worker={worker} openapiUrl="/openapi.yaml" visible={true}>
-        <App />
-      </MswUiWidget>
+      <MswUiWidget worker={worker} openapiUrl="/openapi.yaml" visible={true} />
+      <App />
     </React.StrictMode>
   );
 }

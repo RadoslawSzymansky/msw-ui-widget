@@ -17,7 +17,7 @@
   },
   "scripts": {
     "dev": "vite",
-    "build": "tsc && vite build && cp dist/style.css src/styles/widget.css",
+    "build": "tsc && vite build && node scripts/generate-inline-styles.cjs",
     "preview": "vite preview",
     "type-check": "tsc --noEmit",
     "test": "vitest run",

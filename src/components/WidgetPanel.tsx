@@ -14,6 +14,8 @@ export const WidgetPanel: React.FC = () => {
     removeAllMocks,
     viewMode,
     setViewMode,
+    theme,
+    setTheme,
   } = useWidgetStore();
 
   const { callHistory, clearCallHistory } = useCallHistory();
@@ -43,13 +45,23 @@ export const WidgetPanel: React.FC = () => {
     defaultHeight: 600,
   });
 
+  // Apply theme class to root element
+  React.useEffect(() => {
+    const root = document.querySelector('.msw-widget-root');
+    if (root) {
+      root.classList.toggle('dark', theme === 'dark');
+    }
+  }, [theme]);
+
   if (!isPanelOpen) return null;
 
   return (
     <>
       <div
         ref={containerRef}
-        className="msw-panel bg-white rounded-lg shadow-xl flex flex-col"
+        className={`msw-panel bg-white dark:bg-gray-800 rounded-lg shadow-xl flex flex-col ${
+          theme === 'dark' ? 'dark' : ''
+        }`}
         style={{
           width: `${dimensions.width}px`,
           height: `${dimensions.height}px`,
@@ -61,15 +73,17 @@ export const WidgetPanel: React.FC = () => {
             : { bottom: '96px', right: '24px' }),
         }}
       >
-        <div className="p-4 border-b border-gray-200 flex items-center justify-between bg-gray-50">
-          <h2 className="text-lg font-semibold">MSW Widget</h2>
+        <div className="p-4 border-b border-gray-200 dark:border-gray-700 flex items-center justify-between bg-gray-50 dark:bg-gray-900">
+          <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
+            MSW Widget
+          </h2>
           <div className="flex gap-2">
             <button
               onClick={() => setViewMode('mocks')}
               className={`px-3 py-1 text-sm rounded transition-colors ${
                 viewMode === 'mocks'
-                  ? 'bg-blue-600 text-white'
-                  : 'text-gray-700 hover:bg-gray-200'
+                  ? 'bg-blue-600 dark:bg-indigo-600 text-white'
+                  : 'text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700'
               }`}
               title="Show mocks"
             >
@@ -79,8 +93,8 @@ export const WidgetPanel: React.FC = () => {
               onClick={() => setViewMode('history')}
               className={`px-3 py-1 text-sm rounded transition-colors ${
                 viewMode === 'history'
-                  ? 'bg-blue-600 text-white'
-                  : 'text-gray-700 hover:bg-gray-200'
+                  ? 'bg-blue-600 dark:bg-indigo-600 text-white'
+                  : 'text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700'
               }`}
               title="Show call history"
             >
@@ -88,14 +102,52 @@ export const WidgetPanel: React.FC = () => {
             </button>
             <button
               onClick={removeAllMocks}
-              className="px-3 py-1 text-sm text-red-600 hover:bg-red-50 rounded transition-colors"
+              className="px-3 py-1 text-sm text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 rounded transition-colors"
               title="Remove all mocks"
             >
               Reset
             </button>
             <button
+              onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
+              className="px-3 py-1 text-sm text-gray-700 dark:text-gray-100 hover:bg-gray-200 dark:hover:bg-gray-700 rounded transition-colors flex items-center gap-1"
+              title={`Switch to ${theme === 'dark' ? 'light' : 'dark'} mode`}
+              aria-label={`Switch to ${theme === 'dark' ? 'light' : 'dark'} mode`}
+            >
+              {theme === 'dark' ? (
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  className="h-4 w-4 text-yellow-400"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                  strokeWidth={2}
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"
+                  />
+                </svg>
+              ) : (
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  className="h-4 w-4 text-gray-700"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                  strokeWidth={2}
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"
+                  />
+                </svg>
+              )}
+            </button>
+            <button
               onClick={() => setPanelOpen(false)}
-              className="text-gray-500 hover:text-gray-700"
+              className="text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200"
               aria-label="Close panel"
             >
               ✕
@@ -111,18 +163,20 @@ export const WidgetPanel: React.FC = () => {
           </>
         ) : (
           <div className="flex-1 overflow-hidden flex flex-col min-h-0">
-            <div className="p-4 border-b border-gray-200 flex items-center justify-between bg-white">
-              <h3 className="text-md font-semibold">Call History</h3>
+            <div className="p-4 border-b border-gray-200 dark:border-gray-700 flex items-center justify-between bg-white dark:bg-gray-800">
+              <h3 className="text-md font-semibold text-gray-900 dark:text-gray-100">
+                Call History
+              </h3>
               <button
                 onClick={clearCallHistory}
-                className="text-sm text-gray-600 hover:text-gray-800"
+                className="text-sm text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200"
               >
                 Clear
               </button>
             </div>
-            <div className="flex-1 overflow-y-auto p-4">
+            <div className="flex-1 overflow-y-auto p-4 bg-white dark:bg-gray-800">
               {callHistory.length === 0 ? (
-                <div className="text-center text-gray-500 mt-8">
+                <div className="text-center text-gray-500 dark:text-gray-400 mt-8">
                   No calls recorded yet
                 </div>
               ) : (
@@ -143,7 +197,7 @@ export const WidgetPanel: React.FC = () => {
                       return (
                         <div
                           key={entry.id}
-                          className="border border-gray-200 rounded-md overflow-hidden"
+                          className="border border-gray-200 dark:border-gray-700 rounded-md overflow-hidden"
                         >
                           <div
                             onClick={() => toggleEntry(entry.id)}
@@ -155,36 +209,36 @@ export const WidgetPanel: React.FC = () => {
                             }}
                             role="button"
                             tabIndex={0}
-                            className="p-3 hover:bg-gray-50 cursor-pointer transition-colors"
+                            className="p-3 hover:bg-gray-50 dark:hover:bg-gray-700 cursor-pointer transition-colors"
                           >
                             <div className="flex items-center justify-between mb-2">
                               <span
-                                className="text-xs font-mono text-gray-600 truncate flex-1"
+                                className="text-xs font-mono text-gray-600 dark:text-gray-400 truncate flex-1"
                                 title={entry.fullUrl || displayPath}
                               >
                                 {displayPath}
                               </span>
                               <div className="flex items-center gap-2">
-                                <span className="text-xs text-gray-500">
+                                <span className="text-xs text-gray-500 dark:text-gray-400">
                                   {new Date(
                                     entry.timestamp
                                   ).toLocaleTimeString()}
                                 </span>
-                                <span className="text-xs text-gray-400">
+                                <span className="text-xs text-gray-400 dark:text-gray-500">
                                   {isExpanded ? '▼' : '▶'}
                                 </span>
                               </div>
                             </div>
                             <div className="flex items-center gap-2">
-                              <span className="px-2 py-0.5 text-xs bg-blue-100 text-blue-800 rounded">
+                              <span className="px-2 py-0.5 text-xs bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-300 rounded">
                                 {entry.method}
                               </span>
                               {entry.response && (
                                 <span
                                   className={`px-2 py-0.5 text-xs rounded ${
                                     entry.response.status >= 400
-                                      ? 'bg-red-100 text-red-800'
-                                      : 'bg-green-100 text-green-800'
+                                      ? 'bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-300'
+                                      : 'bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-300'
                                   }`}
                                 >
                                   {entry.response.status}
@@ -193,27 +247,27 @@ export const WidgetPanel: React.FC = () => {
                             </div>
                           </div>
                           {isExpanded && (
-                            <div className="border-t border-gray-200 bg-gray-50 p-4 space-y-4">
+                            <div className="border-t border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900 p-4 space-y-4">
                               {/* Request Section */}
                               <div>
-                                <h4 className="text-sm font-semibold text-gray-700 mb-2">
+                                <h4 className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
                                   Request
                                 </h4>
-                                <div className="bg-white rounded-md p-3 border border-gray-200">
+                                <div className="bg-white dark:bg-gray-800 rounded-md p-3 border border-gray-200 dark:border-gray-700">
                                   <div className="mb-2">
-                                    <span className="text-xs font-semibold text-gray-600">
+                                    <span className="text-xs font-semibold text-gray-600 dark:text-gray-400">
                                       URL:
                                     </span>
-                                    <div className="text-xs font-mono text-gray-800 mt-1 break-all">
+                                    <div className="text-xs font-mono text-gray-800 dark:text-gray-200 mt-1 break-all">
                                       {entry.fullUrl || entry.path}
                                     </div>
                                   </div>
                                   {entry.request?.headers && (
                                     <div className="mb-2">
-                                      <span className="text-xs font-semibold text-gray-600">
+                                      <span className="text-xs font-semibold text-gray-600 dark:text-gray-400">
                                         Headers:
                                       </span>
-                                      <pre className="text-xs font-mono text-gray-800 mt-1 bg-gray-50 p-2 rounded overflow-x-auto">
+                                      <pre className="text-xs font-mono text-gray-800 dark:text-gray-200 mt-1 bg-gray-50 dark:bg-gray-900 p-2 rounded overflow-x-auto">
                                         {JSON.stringify(
                                           entry.request.headers,
                                           null,
@@ -224,10 +278,10 @@ export const WidgetPanel: React.FC = () => {
                                   )}
                                   {entry.request?.body && (
                                     <div>
-                                      <span className="text-xs font-semibold text-gray-600">
+                                      <span className="text-xs font-semibold text-gray-600 dark:text-gray-400">
                                         Body:
                                       </span>
-                                      <pre className="text-xs font-mono text-gray-800 mt-1 bg-gray-50 p-2 rounded overflow-x-auto max-h-64 overflow-y-auto">
+                                      <pre className="text-xs font-mono text-gray-800 dark:text-gray-200 mt-1 bg-gray-50 dark:bg-gray-900 p-2 rounded overflow-x-auto max-h-64 overflow-y-auto">
                                         {typeof entry.request.body === 'string'
                                           ? entry.request.body
                                           : JSON.stringify(
@@ -244,19 +298,19 @@ export const WidgetPanel: React.FC = () => {
                               {/* Response Section */}
                               {entry.response && (
                                 <div>
-                                  <h4 className="text-sm font-semibold text-gray-700 mb-2">
+                                  <h4 className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
                                     Response
                                   </h4>
-                                  <div className="bg-white rounded-md p-3 border border-gray-200">
+                                  <div className="bg-white dark:bg-gray-800 rounded-md p-3 border border-gray-200 dark:border-gray-700">
                                     <div className="mb-2">
-                                      <span className="text-xs font-semibold text-gray-600">
+                                      <span className="text-xs font-semibold text-gray-600 dark:text-gray-400">
                                         Status:
                                       </span>
                                       <span
                                         className={`ml-2 px-2 py-0.5 text-xs rounded ${
                                           entry.response.status >= 400
-                                            ? 'bg-red-100 text-red-800'
-                                            : 'bg-green-100 text-green-800'
+                                            ? 'bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-300'
+                                            : 'bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-300'
                                         }`}
                                       >
                                         {entry.response.status}
@@ -264,10 +318,10 @@ export const WidgetPanel: React.FC = () => {
                                     </div>
                                     {entry.response.body && (
                                       <div>
-                                        <span className="text-xs font-semibold text-gray-600">
+                                        <span className="text-xs font-semibold text-gray-600 dark:text-gray-400">
                                           Body:
                                         </span>
-                                        <pre className="text-xs font-mono text-gray-800 mt-1 bg-gray-50 p-2 rounded overflow-x-auto max-h-64 overflow-y-auto">
+                                        <pre className="text-xs font-mono text-gray-800 dark:text-gray-200 mt-1 bg-gray-50 dark:bg-gray-900 p-2 rounded overflow-x-auto max-h-64 overflow-y-auto">
                                           {typeof entry.response.body ===
                                           'string'
                                             ? entry.response.body
@@ -302,34 +356,44 @@ export const WidgetPanel: React.FC = () => {
             position: 'absolute',
             top: 0,
             left: 0,
-            width: '9px',
-            height: '9px',
+            width: '12px',
+            height: '12px',
             zIndex: 11,
             cursor: 'nwse-resize',
             background: isResizing
-              ? 'rgba(59, 130, 246, 0.6)'
-              : 'rgba(59, 130, 246, 0.3)',
-            borderBottomRightRadius: '3px',
+              ? theme === 'dark'
+                ? 'rgba(96, 165, 250, 0.8)'
+                : 'rgba(59, 130, 246, 0.6)'
+              : theme === 'dark'
+                ? 'rgba(96, 165, 250, 0.5)'
+                : 'rgba(59, 130, 246, 0.3)',
+            borderBottomRightRadius: '4px',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
           }}
           onMouseEnter={(e) => {
             if (!isResizing) {
-              e.currentTarget.style.background = 'rgba(59, 130, 246, 0.5)';
+              e.currentTarget.style.background =
+                theme === 'dark'
+                  ? 'rgba(96, 165, 250, 0.7)'
+                  : 'rgba(59, 130, 246, 0.5)';
               e.currentTarget.style.cursor = 'nwse-resize';
             }
           }}
           onMouseLeave={(e) => {
             if (!isResizing) {
-              e.currentTarget.style.background = 'rgba(59, 130, 246, 0.3)';
+              e.currentTarget.style.background =
+                theme === 'dark'
+                  ? 'rgba(96, 165, 250, 0.5)'
+                  : 'rgba(59, 130, 246, 0.3)';
             }
           }}
           title="Resize widget"
         >
           <svg
-            width="7"
-            height="7"
+            width="9"
+            height="9"
             viewBox="0 0 24 24"
             fill="none"
             stroke="white"

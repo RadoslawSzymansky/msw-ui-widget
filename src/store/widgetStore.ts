@@ -82,6 +82,10 @@ interface WidgetStore extends WidgetState {
   viewMode: 'mocks' | 'history';
   setViewMode: (mode: 'mocks' | 'history') => void;
 
+  // Theme
+  theme: 'light' | 'dark';
+  setTheme: (theme: 'light' | 'dark') => void;
+
   // Reset
   reset: () => void;
 }
@@ -97,6 +101,15 @@ const initialState: Omit<WidgetState, 'activeMocks' | 'queues' | 'callCounts'> =
     globalCallOrder: 0,
   };
 
+// Load theme from localStorage on initialization
+const getInitialTheme = (): 'light' | 'dark' => {
+  if (typeof window === 'undefined') return 'dark';
+  const stored = localStorage.getItem('msw-widget-theme');
+  return (stored === 'light' || stored === 'dark' ? stored : 'dark') as
+    | 'light'
+    | 'dark';
+};
+
 export const useWidgetStore = create<WidgetStore>((set, get) => ({
   ...initialState,
   activeMocks: new Map(),
@@ -109,6 +122,7 @@ export const useWidgetStore = create<WidgetStore>((set, get) => ({
   showMockedOnly: false,
   filterMethods: new Set<HttpMethod>(), // Empty by default - shows all methods
   viewMode: 'mocks' as 'mocks' | 'history',
+  theme: getInitialTheme(),
 
   setWorker: (worker) => set({ worker }),
 
@@ -411,6 +425,14 @@ export const useWidgetStore = create<WidgetStore>((set, get) => ({
   },
 
   setViewMode: (mode) => set({ viewMode: mode }),
+
+  setTheme: (theme) => {
+    set({ theme });
+    // Save to localStorage
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('msw-widget-theme', theme);
+    }
+  },
 
   reset: () => {
     set({

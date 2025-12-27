@@ -23,43 +23,27 @@ describe('MswUiWidget', () => {
     });
   });
 
-  it('should render children', () => {
-    render(
-      <MswUiWidget
-        worker={mockWorker}
-        openapiUrl="/api/openapi.json"
-        visible={true}
-      >
-        <div>Test Content</div>
-      </MswUiWidget>
-    );
-
-    expect(screen.getByText('Test Content')).toBeInTheDocument();
-  });
-
   it('should not render widget when visible is false', () => {
     render(
       <MswUiWidget
         worker={mockWorker}
         openapiUrl="/api/openapi.json"
         visible={false}
-      >
-        <div>Test Content</div>
-      </MswUiWidget>
+      />
     );
 
-    expect(screen.getByText('Test Content')).toBeInTheDocument();
     expect(screen.queryByText('MSW Widget')).not.toBeInTheDocument();
   });
 
   it('should not render widget when worker is null', () => {
     render(
-      <MswUiWidget worker={null} openapiUrl="/api/openapi.json" visible={true}>
-        <div>Test Content</div>
-      </MswUiWidget>
+      <MswUiWidget
+        worker={null}
+        openapiUrl="/api/openapi.json"
+        visible={true}
+      />
     );
 
-    expect(screen.getByText('Test Content')).toBeInTheDocument();
     expect(screen.queryByText('MSW Widget')).not.toBeInTheDocument();
   });
 
@@ -69,9 +53,7 @@ describe('MswUiWidget', () => {
         worker={mockWorker}
         openapiUrl="/api/openapi.json"
         visible={true}
-      >
-        <div>Test</div>
-      </MswUiWidget>
+      />
     );
 
     expect(useWidgetStore.getState().worker).toBe(mockWorker);
@@ -93,9 +75,7 @@ describe('MswUiWidget', () => {
         worker={mockWorker}
         openapiUrl="/api/openapi.json"
         visible={true}
-      >
-        <div>Test</div>
-      </MswUiWidget>
+      />
     );
 
     expect(useWidgetStore.getState().endpoints).toEqual(endpoints);
@@ -115,9 +95,7 @@ describe('MswUiWidget', () => {
         worker={mockWorker}
         openapiUrl="/api/openapi.json"
         visible={true}
-      >
-        <div>Test</div>
-      </MswUiWidget>
+      />
     );
 
     expect(screen.getByText('Loading OpenAPI spec...')).toBeInTheDocument();
@@ -137,9 +115,7 @@ describe('MswUiWidget', () => {
         worker={mockWorker}
         openapiUrl="/api/openapi.json"
         visible={true}
-      >
-        <div>Test</div>
-      </MswUiWidget>
+      />
     );
 
     expect(screen.getByText(/Error:/)).toBeInTheDocument();
@@ -151,9 +127,7 @@ describe('MswUiWidget', () => {
         worker={mockWorker}
         openapiUrl="/api/openapi.json"
         visible={false}
-      >
-        <div>Test</div>
-      </MswUiWidget>
+      />
     );
 
     expect(useOpenApiParser.useOpenApiParser).toHaveBeenCalledWith(null);

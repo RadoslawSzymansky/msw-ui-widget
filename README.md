@@ -34,7 +34,7 @@ Or clone this repository and use the source code directly.
 
 ```tsx
 import { MswUiWidget } from 'msw-ui-widget';
-import 'msw-ui-widget/style.css'; // Import bundled CSS
+// Styles are automatically injected - no need to import CSS!
 import { setupWorker } from 'msw/browser';
 
 // Your MSW worker
@@ -45,14 +45,17 @@ await worker.start();
 
 function App() {
   return (
-    <MswUiWidget
-      worker={worker}
-      openapiUrl="/path/to/openapi.json"
-      visible={true}
-    >
+    <>
       {/* Your app components */}
       <YourApp />
-    </MswUiWidget>
+
+      {/* MSW Widget - renders as a floating button */}
+      <MswUiWidget
+        worker={worker}
+        openapiUrl="/path/to/openapi.json"
+        visible={true}
+      />
+    </>
   );
 }
 ```
@@ -64,7 +67,6 @@ function App() {
 | `worker`     | `MSW Worker` | Yes      | MSW worker instance                              |
 | `openapiUrl` | `string`     | Yes      | Path to OpenAPI 3.0 specification (JSON or YAML) |
 | `visible`    | `boolean`    | No       | Control widget visibility (default: `true`)      |
-| `children`   | `ReactNode`  | Yes      | Your React application                           |
 
 ### Example with Vite
 
@@ -73,9 +75,10 @@ function App() {
 import React from 'react';
 import ReactDOM from 'react-dom/client';
 import { MswUiWidget } from 'msw-ui-widget';
-import 'msw-ui-widget/style.css'; // Import bundled CSS
+// Styles are automatically injected - no need to import CSS!
 import { setupWorker } from 'msw/browser';
 import { handlers } from './mocks/handlers';
+import App from './App';
 
 const worker = setupWorker(...handlers);
 
@@ -86,26 +89,17 @@ async function startApp() {
 
   ReactDOM.createRoot(document.getElementById('root')!).render(
     <React.StrictMode>
+      <App />
       <MswUiWidget
         worker={worker}
         openapiUrl="/api/openapi.json"
         visible={process.env.NODE_ENV === 'development'}
-      >
-        <App />
-      </MswUiWidget>
+      />
     </React.StrictMode>
   );
 }
 
 startApp();
-```
-
-### Alternative CSS Import
-
-You can also import CSS directly from the dist folder:
-
-```tsx
-import 'msw-ui-widget/dist/style.css';
 ```
 
 ## How It Works

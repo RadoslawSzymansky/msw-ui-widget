@@ -6,7 +6,7 @@ interface FloatingButtonProps {
 }
 
 export const FloatingButton: React.FC<FloatingButtonProps> = ({ onClick }) => {
-  const { activeMocks, isPanelOpen, globalCallOrder, setPanelOpen } =
+  const { activeMocks, isPanelOpen, globalCallOrder, setPanelOpen, theme } =
     useWidgetStore();
   const [isAnimating, setIsAnimating] = useState(false);
   const [prevCount, setPrevCount] = useState(0);
@@ -49,11 +49,23 @@ export const FloatingButton: React.FC<FloatingButtonProps> = ({ onClick }) => {
   return (
     <button
       onClick={handleClick}
-      className={`msw-floating-button bg-blue-600 hover:bg-blue-700 text-white rounded-full p-4 shadow-lg relative ${
-        isPanelOpen ? 'bg-blue-700' : ''
-      } ${isAnimating ? 'msw-floating-button-calling' : ''}`}
+      className={`msw-floating-button rounded-full p-4 shadow-lg relative transition-all duration-200 ${
+        theme === 'dark'
+          ? isPanelOpen
+            ? 'bg-indigo-600 hover:bg-indigo-500'
+            : 'bg-indigo-500 hover:bg-indigo-400'
+          : isPanelOpen
+            ? 'bg-blue-600 hover:bg-blue-700'
+            : 'bg-blue-500 hover:bg-blue-600'
+      } text-white ${isAnimating ? 'msw-floating-button-calling' : ''}`}
       aria-label="Toggle MSW Widget"
       title="MSW Widget - Manage API Mocks"
+      style={{
+        boxShadow:
+          theme === 'dark'
+            ? '0 4px 14px 0 rgba(99, 102, 241, 0.4)'
+            : '0 4px 14px 0 rgba(59, 130, 246, 0.4)',
+      }}
     >
       <svg
         xmlns="http://www.w3.org/2000/svg"
@@ -61,17 +73,19 @@ export const FloatingButton: React.FC<FloatingButtonProps> = ({ onClick }) => {
         fill="none"
         viewBox="0 0 24 24"
         stroke="currentColor"
+        strokeWidth={2.5}
       >
         <path
           strokeLinecap="round"
           strokeLinejoin="round"
-          strokeWidth={2}
           d="M8 9l3 3-3 3m5 0h3M5 20h14a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
         />
       </svg>
       {activeMocksCount > 0 && (
         <span
-          className={`absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center font-semibold ${
+          className={`absolute -top-1 -right-1 ${
+            theme === 'dark' ? 'bg-red-400 text-white' : 'bg-red-500 text-white'
+          } text-xs rounded-full h-5 w-5 flex items-center justify-center font-semibold shadow-md ${
             isAnimating ? 'msw-badge-pulse' : ''
           }`}
         >

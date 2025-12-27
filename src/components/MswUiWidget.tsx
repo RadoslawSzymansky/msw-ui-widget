@@ -4,20 +4,32 @@ import { useOpenApiParser } from '../hooks/useOpenApiParser';
 import { useWidgetStore } from '../store/widgetStore';
 import { FloatingButton } from './FloatingButton';
 import { WidgetPanel } from './WidgetPanel';
-import '../styles/widget.css';
-import '../styles/widget-base.css';
+import { injectStyles } from '../utils/injectStyles';
+import widgetStyles from '../styles/inline';
 
 export const MswUiWidget: React.FC<MswUiWidgetProps> = ({
   worker,
   openapiUrl,
   visible = true,
-  children,
 }) => {
   const { endpoints, baseUrl, loading, error } = useOpenApiParser(
     visible ? openapiUrl : null
   );
-  const { setEndpoints, setBaseUrl, setPanelOpen, setWorker } =
+  const { setEndpoints, setBaseUrl, setPanelOpen, setWorker, theme } =
     useWidgetStore();
+
+  // Inject styles into document head (only once)
+  useEffect(() => {
+    injectStyles(widgetStyles);
+  }, []);
+
+  // Apply theme class to root element
+  useEffect(() => {
+    const root = document.querySelector('.msw-widget-root');
+    if (root) {
+      root.classList.toggle('dark', theme === 'dark');
+    }
+  }, [theme]);
 
   // Store worker in global store
   useEffect(() => {
@@ -45,12 +57,11 @@ export const MswUiWidget: React.FC<MswUiWidgetProps> = ({
 
   // Early return if not visible or no worker - prevents any useEffect from running
   if (!visible || !worker) {
-    return <>{children}</>;
+    return null;
   }
 
   return (
     <>
-      {children}
       <div className="msw-widget-root">
         <div className="msw-widget-container">
           <FloatingButton onClick={() => setPanelOpen(true)} />

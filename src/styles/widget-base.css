@@ -109,3 +109,208 @@
 .msw-badge-pulse {
   animation: badge-pulse 0.4s ease-in-out;
 }
+
+/* Dark mode styles */
+.msw-widget-root.dark .bg-white {
+  background-color: rgb(31 41 55) !important; /* gray-800 */
+}
+
+.msw-widget-root.dark .bg-gray-50 {
+  background-color: rgb(17 24 39) !important; /* gray-900 */
+}
+
+.msw-widget-root.dark .bg-gray-100 {
+  background-color: rgb(55 65 81) !important; /* gray-700 */
+}
+
+.msw-widget-root.dark .bg-blue-50 {
+  background-color: rgba(
+    30,
+    58,
+    138,
+    0.5
+  ) !important; /* blue-900/50 - jaśniejsze dla lepszej widoczności */
+}
+
+.msw-widget-root.dark .text-gray-700,
+.msw-widget-root.dark .text-gray-800,
+.msw-widget-root.dark .text-gray-900 {
+  color: rgb(243 244 246) !important; /* gray-100 */
+}
+
+.msw-widget-root.dark .text-gray-600 {
+  color: rgb(209 213 219) !important; /* gray-300 */
+}
+
+.msw-widget-root.dark .text-gray-500 {
+  color: rgb(156 163 175) !important; /* gray-400 */
+}
+
+.msw-widget-root.dark .text-gray-400 {
+  color: rgb(107 114 128) !important; /* gray-500 */
+}
+
+.msw-widget-root.dark .border-gray-200,
+.msw-widget-root.dark .border-gray-300 {
+  border-color: rgb(55 65 81) !important; /* gray-700 */
+}
+
+.msw-widget-root.dark .border-gray-600 {
+  border-color: rgb(75 85 99) !important; /* gray-600 */
+}
+
+.msw-widget-root.dark .hover\:bg-gray-50:hover,
+.msw-widget-root.dark .hover\:bg-gray-100:hover {
+  background-color: rgb(55 65 81) !important; /* gray-700 */
+}
+
+.msw-widget-root.dark .hover\:bg-gray-200:hover {
+  background-color: rgb(75 85 99) !important; /* gray-600 */
+}
+
+.msw-widget-root.dark .bg-blue-600 {
+  background-color: rgb(59 130 246) !important; /* blue-500 */
+}
+
+.msw-widget-root.dark .bg-blue-700,
+.msw-widget-root.dark .hover\:bg-blue-700:hover {
+  background-color: rgb(37 99 235) !important; /* blue-600 */
+}
+
+.msw-widget-root.dark .bg-red-600 {
+  background-color: rgb(239 68 68) !important; /* red-500 */
+}
+
+.msw-widget-root.dark .hover\:bg-red-50:hover {
+  background-color: rgba(127, 29, 29, 0.2) !important; /* red-900/20 */
+}
+
+.msw-widget-root.dark .text-red-600 {
+  color: rgb(248 113 113) !important; /* red-400 */
+}
+
+.msw-widget-root.dark .bg-green-600,
+.msw-widget-root.dark .hover\:bg-green-700:hover {
+  background-color: rgb(34 197 94) !important; /* green-500 */
+}
+
+.msw-widget-root.dark .bg-green-100 {
+  background-color: rgba(20, 83, 45, 0.3) !important; /* green-900/30 */
+}
+
+.msw-widget-root.dark .text-green-700,
+.msw-widget-root.dark .text-green-800 {
+  color: rgb(134 239 172) !important; /* green-300 */
+}
+
+.msw-widget-root.dark .bg-blue-100 {
+  background-color: rgba(30, 58, 138, 0.3) !important; /* blue-900/30 */
+}
+
+.msw-widget-root.dark .text-blue-800 {
+  color: rgb(147 197 253) !important; /* blue-300 */
+}
+
+.msw-widget-root.dark .bg-yellow-50 {
+  background-color: rgba(113, 63, 18, 0.2) !important; /* yellow-900/20 */
+}
+
+.msw-widget-root.dark .bg-yellow-100 {
+  background-color: rgba(113, 63, 18, 0.3) !important; /* yellow-900/30 */
+}
+
+.msw-widget-root.dark .text-yellow-600 {
+  color: rgb(250 204 21) !important; /* yellow-400 */
+}
+
+.msw-widget-root.dark .bg-purple-100 {
+  background-color: rgba(88, 28, 135, 0.3) !important; /* purple-900/30 */
+}
+
+.msw-widget-root.dark .text-purple-800 {
+  color: rgb(216 180 254) !important; /* purple-300 */
+}
+
+.msw-widget-root.dark .bg-indigo-100 {
+  background-color: rgba(49, 46, 129, 0.3) !important; /* indigo-900/30 */
+}
+
+.msw-widget-root.dark .text-indigo-800 {
+  color: rgb(165 180 252) !important; /* indigo-300 */
+}
+
+.msw-widget-root.dark .bg-red-100 {
+  background-color: rgba(127, 29, 29, 0.3) !important; /* red-900/30 */
+}
+
+.msw-widget-root.dark .text-red-800 {
+  color: rgb(252 165 165) !important; /* red-300 */
+}
+
+.msw-widget-root.dark input,
+.msw-widget-root.dark textarea,
+.msw-widget-root.dark select {
+  background-color: rgb(55 65 81) !important; /* gray-700 */
+  color: rgb(243 244 246) !important; /* gray-100 */
+  border-color: rgb(75 85 99) !important; /* gray-600 */
+}
+
+.msw-widget-root.dark input::placeholder,
+.msw-widget-root.dark textarea::placeholder {
+  color: rgb(156 163 175) !important; /* gray-400 */
+}
+
+.msw-widget-root.dark .hover\:text-gray-700:hover,
+.msw-widget-root.dark .hover\:text-gray-800:hover {
+  color: rgb(229 231 235) !important; /* gray-200 */
+}
+
+.msw-widget-root.dark .hover\:text-red-500:hover {
+  color: rgb(248 113 113) !important; /* red-400 */
+}
+
+/* Ensure better text visibility in light mode inputs */
+.msw-widget-root:not(.dark) input,
+.msw-widget-root:not(.dark) textarea,
+.msw-widget-root:not(.dark) select {
+  color: rgb(17 24 39) !important; /* gray-900 - darker text */
+}
+
+.msw-widget-root:not(.dark) input::placeholder,
+.msw-widget-root:not(.dark) textarea::placeholder {
+  color: rgb(107 114 128) !important; /* gray-500 - better contrast */
+}
+
+.msw-widget-root:not(.dark) .text-gray-500 {
+  color: rgb(75 85 99) !important; /* gray-600 - darker for better visibility */
+}
+
+/* Ensure headers are dark in light mode */
+.msw-widget-root:not(.dark) h2,
+.msw-widget-root:not(.dark) h3,
+.msw-widget-root:not(.dark) h4 {
+  color: rgb(17 24 39) !important; /* gray-900 */
+}
+
+/* Dark mode button colors - more muted */
+.msw-widget-root.dark .bg-indigo-600 {
+  background-color: rgb(79 70 229) !important; /* indigo-600 */
+}
+
+.msw-widget-root.dark .bg-indigo-500,
+.msw-widget-root.dark .hover\:bg-indigo-500:hover {
+  background-color: rgb(99 102 241) !important; /* indigo-500 */
+}
+
+.msw-widget-root.dark .bg-emerald-600 {
+  background-color: rgb(5 150 105) !important; /* emerald-600 */
+}
+
+.msw-widget-root.dark .bg-emerald-700,
+.msw-widget-root.dark .hover\:bg-emerald-700:hover {
+  background-color: rgb(4 120 87) !important; /* emerald-700 */
+}
+
+.msw-widget-root.dark .hover\:bg-emerald-600:hover {
+  background-color: rgb(5 150 105) !important; /* emerald-600 */
+}

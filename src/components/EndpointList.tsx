@@ -171,7 +171,7 @@ export const EndpointList: React.FC<EndpointListProps> = ({ endpoints }) => {
 
   if (filteredEndpoints.length === 0) {
     return (
-      <div className="p-8 text-center text-gray-500">
+      <div className="p-8 text-center text-gray-500 dark:text-gray-400">
         {endpoints.length === 0
           ? 'No endpoints found in OpenAPI spec'
           : 'No endpoints match your filters'}

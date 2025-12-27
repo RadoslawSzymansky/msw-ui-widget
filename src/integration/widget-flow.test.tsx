@@ -33,9 +33,7 @@ describe('Widget Flow Integration', () => {
         worker={mockWorker}
         openapiUrl="/api/openapi.json"
         visible={true}
-      >
-        <div>App</div>
-      </MswUiWidget>
+      />
     );
 
     // Open panel
@@ -51,9 +49,7 @@ describe('Widget Flow Integration', () => {
         worker={mockWorker}
         openapiUrl="/api/openapi.json"
         visible={true}
-      >
-        <div>App</div>
-      </MswUiWidget>
+      />
     );
 
     useWidgetStore.getState().setPanelOpen(true);

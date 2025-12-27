@@ -109,11 +109,8 @@ export interface WidgetState {
   globalCallOrder: number; // Global counter for call order
 }
 
-import React from 'react';
-
 export interface MswUiWidgetProps {
   worker: any; // MSW worker instance
   openapiUrl: string;
   visible?: boolean;
-  children: React.ReactNode;
 }

@@ -30,15 +30,26 @@ export function useResize({
       try {
         const parsed = JSON.parse(stored);
         // Validate dimensions - ensure they meet minimum requirements
-        const width = parsed.width || defaultWidth;
-        const height = parsed.height || defaultHeight;
-        return {
-          width: Math.max(minWidth, width),
-          height: Math.max(minHeight, height),
-          ...(parsed.left !== undefined && parsed.top !== undefined
-            ? { left: parsed.left, top: parsed.top }
-            : {}),
-        };
+        const width = Math.max(minWidth, parsed.width || defaultWidth);
+        const height = Math.max(minHeight, parsed.height || defaultHeight);
+
+        // Only restore position if it's within viewport
+        if (parsed.left !== undefined && parsed.top !== undefined) {
+          const viewportWidth = window.innerWidth;
+          const viewportHeight = window.innerHeight;
+          const isInViewport =
+            parsed.left >= 0 &&
+            parsed.top >= 0 &&
+            parsed.left + width <= viewportWidth &&
+            parsed.top + height <= viewportHeight;
+
+          if (isInViewport) {
+            return { width, height, left: parsed.left, top: parsed.top };
+          }
+        }
+
+        // Position is outside viewport or not set - use default (bottom/right)
+        return { width, height };
       } catch {
         return { width: defaultWidth, height: defaultHeight };
       }
@@ -73,6 +84,87 @@ export function useResize({
     },
     []
   );
+
+  // Constrain position to viewport
+  const constrainToViewport = useCallback(
+    (left: number, top: number, width: number, height: number) => {
+      const viewportWidth = window.innerWidth;
+      const viewportHeight = window.innerHeight;
+
+      // Ensure widget stays within viewport bounds
+      let constrainedLeft = left;
+      let constrainedTop = top;
+
+      // Check right edge
+      if (constrainedLeft + width > viewportWidth) {
+        constrainedLeft = Math.max(0, viewportWidth - width);
+      }
+
+      // Check left edge
+      if (constrainedLeft < 0) {
+        constrainedLeft = 0;
+      }
+
+      // Check bottom edge
+      if (constrainedTop + height > viewportHeight) {
+        constrainedTop = Math.max(0, viewportHeight - height);
+      }
+
+      // Check top edge
+      if (constrainedTop < 0) {
+        constrainedTop = 0;
+      }
+
+      return { left: constrainedLeft, top: constrainedTop };
+    },
+    []
+  );
+
+  // Watch for window resize and adjust position if needed
+  useEffect(() => {
+    if (!containerRef.current) return;
+
+    const handleResize = () => {
+      setDimensions((current) => {
+        // Only adjust if we have explicit left/top positioning
+        if (
+          current.left !== undefined &&
+          current.top !== undefined &&
+          containerRef.current
+        ) {
+          const constrained = constrainToViewport(
+            current.left,
+            current.top,
+            current.width,
+            current.height
+          );
+
+          // Only update if position changed
+          if (
+            constrained.left !== current.left ||
+            constrained.top !== current.top
+          ) {
+            const updated = {
+              ...current,
+              left: constrained.left,
+              top: constrained.top,
+            };
+            saveDimensions(
+              updated.width,
+              updated.height,
+              updated.left,
+              updated.top
+            );
+            return updated;
+          }
+        }
+        return current;
+      });
+    };
+
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, [constrainToViewport, saveDimensions]);
 
   useEffect(() => {
     if (!isResizing) return;
@@ -121,8 +213,18 @@ export function useResize({
       const actualDeltaY = constrainedHeight - startHeight;
 
       // Calculate new position based on constrained dimensions
-      const finalLeft = startLeft - actualDeltaX;
-      const finalTop = startTop - actualDeltaY;
+      let finalLeft = startLeft - actualDeltaX;
+      let finalTop = startTop - actualDeltaY;
+
+      // Constrain position to viewport
+      const constrained = constrainToViewport(
+        finalLeft,
+        finalTop,
+        constrainedWidth,
+        constrainedHeight
+      );
+      finalLeft = constrained.left;
+      finalTop = constrained.top;
 
       setDimensions({
         width: constrainedWidth,
@@ -162,6 +264,7 @@ export function useResize({
     minHeight,
     maxHeight,
     saveDimensions,
+    constrainToViewport,
   ]);
 
   return {

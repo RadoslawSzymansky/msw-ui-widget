@@ -44,14 +44,15 @@ export const EndpointItem: React.FC<EndpointItemProps> = ({ endpoint }) => {
   }, [lastCalled, activeMock]);
 
   const methodColors: Record<HttpMethod, string> = {
-    GET: 'bg-green-100 text-green-800',
-    POST: 'bg-blue-100 text-blue-800',
-    PUT: 'bg-yellow-100 text-yellow-800',
-    DELETE: 'bg-red-100 text-red-800',
-    PATCH: 'bg-purple-100 text-purple-800',
-    HEAD: 'bg-gray-100 text-gray-800',
-    OPTIONS: 'bg-gray-100 text-gray-800',
-    ALL: 'bg-indigo-100 text-indigo-800',
+    GET: 'bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-300',
+    POST: 'bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-300',
+    PUT: 'bg-yellow-100 dark:bg-yellow-900/30 text-yellow-800 dark:text-yellow-300',
+    DELETE: 'bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-300',
+    PATCH:
+      'bg-purple-100 dark:bg-purple-900/30 text-purple-800 dark:text-purple-300',
+    HEAD: 'bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-300',
+    OPTIONS: 'bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-300',
+    ALL: 'bg-indigo-100 dark:bg-indigo-900/30 text-indigo-800 dark:text-indigo-300',
   };
 
   return (
@@ -59,32 +60,38 @@ export const EndpointItem: React.FC<EndpointItemProps> = ({ endpoint }) => {
       <div
         ref={itemRef}
         data-endpoint-id={endpoint.id}
-        className={`p-3 border-b border-gray-200 hover:bg-gray-50 transition-colors ${
+        className={`p-3 border-b border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors ${
           isAnimating ? 'endpoint-call-indicator' : ''
-        } ${isPinned ? 'bg-yellow-50 border-yellow-200' : ''}`}
+        } ${isPinned ? 'bg-yellow-50 dark:bg-yellow-900/20 border-yellow-200 dark:border-yellow-800' : ''}`}
       >
         <div className="flex items-center justify-between">
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-2 mb-1">
               {isPinned && (
-                <span className="text-yellow-600" title="Pinned endpoint">
+                <span
+                  className="text-yellow-600 dark:text-yellow-400"
+                  title="Pinned endpoint"
+                >
                   📌
                 </span>
               )}
               <span
                 className={`px-2 py-1 text-xs font-semibold rounded ${
-                  methodColors[endpoint.method] || 'bg-gray-100 text-gray-800'
+                  methodColors[endpoint.method] ||
+                  'bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-300'
                 }`}
               >
                 {endpoint.method}
               </span>
-              <span className="text-sm font-mono text-gray-700 truncate">
+              <span className="text-sm font-mono text-gray-700 dark:text-gray-300 truncate">
                 {formatPathForDisplay(endpoint.path)}
               </span>
             </div>
-            <div className="flex items-center gap-4 text-xs text-gray-500">
+            <div className="flex items-center gap-4 text-xs text-gray-500 dark:text-gray-400">
               {activeMock && activeMock.enabled && (
-                <span className="text-gray-400">Mocked:</span>
+                <span className="text-gray-400 dark:text-gray-500">
+                  Mocked:
+                </span>
               )}
               {activeMock && queue && queue.items.length > 0 && (
                 <>
@@ -98,8 +105,8 @@ export const EndpointItem: React.FC<EndpointItemProps> = ({ endpoint }) => {
                         key={item.id}
                         className={`px-2 py-0.5 rounded ${
                           activeMock.enabled
-                            ? 'bg-green-100 text-green-700'
-                            : 'bg-gray-100 text-gray-600'
+                            ? 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300'
+                            : 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400'
                         }`}
                       >
                         {item.name || `Mock ${index + 1}`}{' '}
@@ -113,8 +120,8 @@ export const EndpointItem: React.FC<EndpointItemProps> = ({ endpoint }) => {
                 <span
                   className={`px-2 py-0.5 rounded ${
                     activeMock.enabled
-                      ? 'bg-green-100 text-green-700'
-                      : 'bg-gray-100 text-gray-600'
+                      ? 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300'
+                      : 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400'
                   }`}
                 >
                   {activeMock.name || 'Mock'}
@@ -130,8 +137,8 @@ export const EndpointItem: React.FC<EndpointItemProps> = ({ endpoint }) => {
               }}
               className={`p-1 rounded transition-colors ${
                 isPinned
-                  ? 'text-yellow-600 hover:bg-yellow-100'
-                  : 'text-gray-400 hover:bg-gray-100'
+                  ? 'text-yellow-600 dark:text-yellow-400 hover:bg-yellow-100 dark:hover:bg-yellow-900/30'
+                  : 'text-gray-400 dark:text-gray-500 hover:bg-gray-100 dark:hover:bg-gray-700'
               }`}
               title={isPinned ? 'Unpin endpoint' : 'Pin endpoint'}
             >
@@ -143,7 +150,7 @@ export const EndpointItem: React.FC<EndpointItemProps> = ({ endpoint }) => {
                   e.stopPropagation();
                   removeMock(endpoint.method);
                 }}
-                className="p-1 rounded transition-colors text-gray-500 hover:text-red-500 hover:bg-red-50 flex items-center justify-center"
+                className="p-1 rounded transition-colors text-gray-500 dark:text-gray-400 hover:text-red-500 dark:hover:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 flex items-center justify-center"
                 title="Remove mock"
                 style={{ minWidth: '20px', minHeight: '20px' }}
               >
@@ -165,7 +172,7 @@ export const EndpointItem: React.FC<EndpointItemProps> = ({ endpoint }) => {
             )}
             <button
               onClick={() => setIsEditorOpen(true)}
-              className="px-3 py-1 text-sm bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors"
+              className="px-3 py-1 text-sm bg-blue-600 dark:bg-indigo-600 text-white rounded hover:bg-blue-700 dark:hover:bg-indigo-500 transition-colors"
             >
               {activeMock ? 'Edit' : 'Mock'}
             </button>
