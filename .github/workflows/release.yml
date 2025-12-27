@@ -141,10 +141,10 @@ jobs:
   publish:
     name: Publish to npm
     runs-on: ubuntu-latest
-    needs: [check-release-needed, create-release]
+    needs: [check-release-needed]
     # Publish if release was created OR if last commit is a release commit (manual release)
     if: |
-      (needs.check-release-needed.outputs.should-release == 'true' && needs.create-release.result == 'success') ||
+      (needs.check-release-needed.outputs.should-release == 'true') ||
       needs.check-release-needed.outputs.is-release-commit == 'true'
     permissions:
       contents: read
