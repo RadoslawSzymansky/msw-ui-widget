@@ -285,6 +285,22 @@
   color: rgb(75 85 99) !important; /* gray-600 - darker for better visibility */
 }
 
+/* Ensure SVG icons in theme toggle are visible */
+.msw-widget-root button svg {
+  width: 16px !important;
+  height: 16px !important;
+  display: inline-block !important;
+  flex-shrink: 0 !important;
+}
+
+.msw-widget-root button svg.text-yellow-400 {
+  color: rgb(250 204 21) !important; /* yellow-400 */
+}
+
+.msw-widget-root button svg.text-gray-700 {
+  color: rgb(55 65 81) !important; /* gray-700 */
+}
+
 /* Ensure headers are dark in light mode */
 .msw-widget-root:not(.dark) h2,
 .msw-widget-root:not(.dark) h3,

@@ -121,6 +121,9 @@ export const WidgetPanel: React.FC = () => {
                   viewBox="0 0 24 24"
                   stroke="currentColor"
                   strokeWidth={2}
+                  width="16"
+                  height="16"
+                  style={{ width: '16px', height: '16px', flexShrink: 0 }}
                 >
                   <path
                     strokeLinecap="round"
@@ -136,6 +139,9 @@ export const WidgetPanel: React.FC = () => {
                   viewBox="0 0 24 24"
                   stroke="currentColor"
                   strokeWidth={2}
+                  width="16"
+                  height="16"
+                  style={{ width: '16px', height: '16px', flexShrink: 0 }}
                 >
                   <path
                     strokeLinecap="round"
