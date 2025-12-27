@@ -262,6 +262,7 @@ jobs:
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
+          ref: main
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
@@ -270,11 +271,19 @@ jobs:
           cache: 'npm'
           registry-url: 'https://registry.npmjs.org'
 
+      - name: Fetch latest changes and tags
+        run: |
+          git fetch origin main --force
+          git fetch --tags --force
+          git checkout main || true
+          git pull origin main || true
+          echo "Current commit:"
+          git log --oneline -3
+          echo "Latest tag:"
+          git describe --tags --abbrev=0 2>/dev/null || echo "No tags found"
+
       - name: Install dependencies
         run: npm ci
-
-      - name: Fetch tags
-        run: git fetch --tags
 
       - name: Get version from create-release output or latest tag
         id: version
@@ -294,16 +303,21 @@ jobs:
               VERSION="$CREATE_RELEASE_VERSION"
               echo "✓ Using version from create-release output: ${VERSION}"
             else
-              # Fallback: wait a bit longer and fetch tags (tags need time to be pushed)
-              echo "Waiting for tags to be pushed (create-release may have just finished)..."
-              sleep 20
+              # Fallback: wait a bit longer and fetch latest changes and tags
+              echo "Waiting for release commit and tags to be pushed..."
+              sleep 10
+              git fetch origin main --force
               git fetch --tags --force
+              git checkout main
+              git pull origin main || true
+              
+              # Try to get version from latest tag
               LATEST_TAG=$(git describe --tags --abbrev=0 2>/dev/null || echo "")
               if [ -n "$LATEST_TAG" ]; then
                 VERSION=${LATEST_TAG#v}
                 echo "✓ Using version from latest tag: ${VERSION}"
               else
-                # Last resort: use package.json (but this should be updated by create-release)
+                # Last resort: use package.json (should be updated by create-release)
                 VERSION=$(node -p "require('./package.json').version")
                 echo "⚠ Using version from package.json (fallback): ${VERSION}"
               fi
