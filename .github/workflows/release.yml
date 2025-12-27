@@ -127,11 +127,26 @@ jobs:
 
           # Always run npm run release - it will determine the new version based on commits
           echo "Creating new release..."
-          npm run release
+          npm run release || {
+            echo "npm run release failed, checking status..."
+            git status
+            exit 1
+          }
 
           # Get the new version and tag after release
           NEW_VERSION=$(node -p "require('./package.json').version")
-          NEW_TAG=$(git describe --tags --abbrev=0)
+
+          # Refresh tags after standard-version creates them
+          git fetch --tags --force
+
+          # Get the new tag (should be the latest one)
+          NEW_TAG=$(git describe --tags --abbrev=0 2>/dev/null || echo "")
+
+          # If NEW_TAG is empty, try to get it from git log or package.json
+          if [ -z "$NEW_TAG" ]; then
+            echo "Warning: Could not find tag after release, using version from package.json"
+            NEW_TAG="v${NEW_VERSION}"
+          fi
 
           echo "New version after release: ${NEW_VERSION}"
           echo "New tag after release: ${NEW_TAG}"
@@ -154,7 +169,18 @@ jobs:
       - name: Push release commit and tags
         if: steps.create-release.outputs.tag-exists == 'false'
         run: |
-          git push --follow-tags
+          echo "Pushing release commit and tags..."
+          echo "Recent commits:"
+          git log --oneline -3
+          echo "Tags before push:"
+          git tag -l | tail -5
+          echo "Pushing..."
+          git push origin HEAD:main --follow-tags || {
+            echo "Push with --follow-tags failed, trying separately..."
+            git push origin HEAD:main || echo "Commit push failed"
+            git push origin --tags || echo "Tags push failed"
+          }
+          echo "Push completed"
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
