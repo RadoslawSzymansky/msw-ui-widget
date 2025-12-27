@@ -109,13 +109,18 @@ jobs:
             echo "Tag $EXPECTED_TAG already exists, skipping release creation"
             echo "tag-exists=true" >> $GITHUB_OUTPUT
             echo "tag=${EXPECTED_TAG}" >> $GITHUB_OUTPUT
+            echo "version=${CURRENT_VERSION}" >> $GITHUB_OUTPUT
           else
             echo "Creating new release..."
             npm run release
             echo "tag-exists=false" >> $GITHUB_OUTPUT
             # Get the new tag
             NEW_TAG=$(git describe --tags --abbrev=0)
+            # Get new version from package.json (after release)
+            NEW_VERSION=$(node -p "require('./package.json').version")
             echo "tag=${NEW_TAG}" >> $GITHUB_OUTPUT
+            echo "version=${NEW_VERSION}" >> $GITHUB_OUTPUT
+            echo "Created release ${NEW_TAG} with version ${NEW_VERSION}"
           fi
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -178,17 +183,20 @@ jobs:
   publish:
     name: Publish to npm
     runs-on: ubuntu-latest
-    needs: [check-release-needed]
+    needs: [check-release-needed, create-release]
     # Publish if release was created OR if last commit is a release commit (manual release)
+    # Note: create-release.result can be 'success', 'skipped', or 'failure'
     if: |
       (needs.check-release-needed.outputs.should-release == 'true') ||
-      needs.check-release-needed.outputs.is-release-commit == 'true'
+      (needs.check-release-needed.outputs.is-release-commit == 'true')
     permissions:
       contents: read
 
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
@@ -200,20 +208,67 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Build package
-        run: npm run build
+      - name: Fetch tags
+        run: git fetch --tags
 
-      - name: Get version from package.json
+      - name: Get version from create-release output or latest tag
         id: version
         run: |
-          VERSION=$(node -p "require('./package.json').version")
+          # Debug: show available outputs
+          echo "should-release: ${{ needs.check-release-needed.outputs.should-release }}"
+          echo "is-release-commit: ${{ needs.check-release-needed.outputs.is-release-commit }}"
+          echo "create-release result: ${{ needs.create-release.result }}"
+          echo "create-release version output: ${{ needs.create-release.outputs.version }}"
+          echo "create-release tag output: ${{ needs.create-release.outputs.tag }}"
+          
+          # If create-release created a new release, use its version output
+          if [ "${{ needs.check-release-needed.outputs.should-release }}" == "true" ] && [ "${{ needs.create-release.result }}" == "success" ]; then
+            # Try to get version from create-release output first
+            CREATE_RELEASE_VERSION="${{ needs.create-release.outputs.version }}"
+            if [ -n "$CREATE_RELEASE_VERSION" ] && [ "$CREATE_RELEASE_VERSION" != "" ] && [ "$CREATE_RELEASE_VERSION" != "null" ]; then
+              VERSION="$CREATE_RELEASE_VERSION"
+              echo "✓ Using version from create-release output: ${VERSION}"
+            else
+              # Fallback: wait a bit longer and fetch tags (tags need time to be pushed)
+              echo "Waiting for tags to be pushed (create-release may have just finished)..."
+              sleep 20
+              git fetch --tags --force
+              LATEST_TAG=$(git describe --tags --abbrev=0 2>/dev/null || echo "")
+              if [ -n "$LATEST_TAG" ]; then
+                VERSION=${LATEST_TAG#v}
+                echo "✓ Using version from latest tag: ${VERSION}"
+              else
+                # Last resort: use package.json (but this should be updated by create-release)
+                VERSION=$(node -p "require('./package.json').version")
+                echo "⚠ Using version from package.json (fallback): ${VERSION}"
+              fi
+            fi
+          elif [ "${{ needs.check-release-needed.outputs.is-release-commit }}" == "true" ]; then
+            # Manual release commit - get version from tag or package.json
+            git fetch --tags --force
+            LATEST_TAG=$(git describe --tags --abbrev=0 2>/dev/null || echo "")
+            if [ -n "$LATEST_TAG" ]; then
+              VERSION=${LATEST_TAG#v}
+              echo "✓ Using version from latest tag: ${VERSION}"
+            else
+              VERSION=$(node -p "require('./package.json').version")
+              echo "✓ Using version from package.json: ${VERSION}"
+            fi
+          else
+            # Should not happen, but fallback
+            VERSION=$(node -p "require('./package.json').version")
+            echo "⚠ Using version from package.json (unexpected case): ${VERSION}"
+          fi
           echo "version=${VERSION}" >> $GITHUB_OUTPUT
-          echo "Publishing version: ${VERSION}"
+          echo "Final version to publish: ${VERSION}"
+
+      - name: Build package
+        run: npm run build
 
       - name: Check if version already exists in npm
         id: check-npm
         run: |
-          VERSION=$(node -p "require('./package.json').version")
+          VERSION="${{ steps.version.outputs.version }}"
           PACKAGE_NAME=$(node -p "require('./package.json').name")
 
           # Check if version exists in npm
