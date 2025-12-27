@@ -72,6 +72,10 @@ jobs:
     if: needs.check-release-needed.outputs.should-release == 'true'
     permissions:
       contents: write
+    outputs:
+      version: ${{ steps.create-release.outputs.version }}
+      tag: ${{ steps.create-release.outputs.tag }}
+      tag-exists: ${{ steps.create-release.outputs.tag-exists }}
 
     steps:
       - name: Checkout code
